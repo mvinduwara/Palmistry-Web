@@ -52,6 +52,9 @@ export default function ChatBox({ analysis }: { analysis: PalmAnalysis | null })
 
       if (response.ok && data.reply) {
         setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'ai', text: data.reply }]);
+      } else if (response.status === 429) {
+         alert("The spirits need a moment to rest. (Rate limit reached). Please wait 60 seconds and try again.");
+         setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'ai', text: 'Rate limit reached. Please wait.' }]);
       } else {
         setMessages((prev) => [...prev, { id: Date.now() + 1, sender: 'ai', text: 'Sorry, the connection was lost.' }]);
       }
@@ -77,10 +80,15 @@ export default function ChatBox({ analysis }: { analysis: PalmAnalysis | null })
         setMessages(prev => prev.map(msg => 
           msg.id === id ? { ...msg, translatedText: data.translatedText, isTranslating: false } : msg
         ));
+      } else if (response.status === 429) {
+         alert("The spirits need a moment to rest. (Rate limit reached). Please wait 60 seconds and try again.");
+         setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, isTranslating: false } : msg));
       } else {
+         alert("Translation failed. Please try again.");
          setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, isTranslating: false } : msg));
       }
     } catch (error) {
+       alert("Network connection error.");
        setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, isTranslating: false } : msg));
     }
   };

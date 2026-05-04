@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    
+
     const prompt = `
       Translate the following text into Sinhala (සිංහල).
       Ensure the tone is respectful and suitable for a palmistry context.
@@ -26,8 +26,18 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, translatedText }, { status: 200 });
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Translation error:", error);
+  
+    const apiError = error as { status?: number; message?: string };
+
+    if (apiError.status === 429 || apiError.message?.includes("429") || apiError.message?.includes("quota")) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Please wait a minute before translating again." },
+        { status: 429 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to translate message." },
       { status: 500 }
