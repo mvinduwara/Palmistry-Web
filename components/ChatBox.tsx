@@ -1,19 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+
+export interface PalmAnalysis {
+  dominant_mounts: string[];
+  line_analysis: string;
+  identified_yogs: string[];
+  reading_summary: string;
+}
 
 interface Message {
   id: number;
   sender: 'user' | 'ai';
   text: string;
+  translatedText?: string;
+  isTranslating?: boolean;
 }
 
-export default function ChatBox({ analysis }: { analysis: any }) {
+export default function ChatBox({ analysis }: { analysis: PalmAnalysis | null }) {
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, sender: 'ai', text: 'සාදරයෙන් පිළිගනිමු! (Welcome!) I have reviewed your palm lines. What would you like to know about your reading?' },
   ]);
   const [userInput, setUserInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSendMessage = async (textToSend: string = userInput) => {
     if (textToSend.trim() === '') return;
@@ -48,6 +62,29 @@ export default function ChatBox({ analysis }: { analysis: any }) {
     }
   };
 
+  const handleTranslateMessage = async (id: number, text: string) => {
+    setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, isTranslating: true } : msg));
+
+    try {
+      const response = await fetch("/api/translate-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      const data = await response.json();
+
+      if (response.ok && data.translatedText) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === id ? { ...msg, translatedText: data.translatedText, isTranslating: false } : msg
+        ));
+      } else {
+         setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, isTranslating: false } : msg));
+      }
+    } catch (error) {
+       setMessages(prev => prev.map(msg => msg.id === id ? { ...msg, isTranslating: false } : msg));
+    }
+  };
+
   return (
     <div className="border border-gray-200 bg-white rounded-lg shadow-inner h-full flex flex-col p-4 m-6 lg:m-0 overflow-hidden">
       <div className="pb-4 border-b border-gray-200 mb-4 flex justify-between items-center">
@@ -58,8 +95,32 @@ export default function ChatBox({ analysis }: { analysis: any }) {
       <div className="flex-grow space-y-4 overflow-y-auto pr-2 scrollbar-thin flex flex-col">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`p-3 rounded-lg max-w-[85%] text-sm ${msg.sender === 'user' ? 'bg-indigo-600 text-white rounded-br-none' : 'bg-gray-100 text-gray-800 rounded-bl-none'}`}>
-              {msg.text}
+            <div className="flex flex-col items-start max-w-[85%]">
+                
+                <div className={`p-3 rounded-lg text-sm ${
+                  msg.sender === 'user' 
+                    ? 'bg-indigo-600 text-white rounded-br-none' 
+                    : 'bg-indigo-50 text-slate-900 border border-indigo-100 rounded-bl-none'
+                }`}>
+                  {msg.text}
+                  
+                  {msg.translatedText && (
+                    <div className="mt-2 pt-2 border-t border-indigo-200 text-indigo-900 font-medium">
+                        {msg.translatedText}
+                    </div>
+                  )}
+                </div>
+                
+                {msg.sender === 'ai' && !msg.translatedText && (
+                    <button 
+                        onClick={() => handleTranslateMessage(msg.id, msg.text)}
+                        disabled={msg.isTranslating}
+                        className="text-[10px] text-gray-500 mt-1 ml-1 hover:text-indigo-600 font-medium transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                        {msg.isTranslating ? 'Translating...' : 'Translate'}
+                    </button>
+                )}
+
             </div>
           </div>
         ))}
@@ -68,6 +129,7 @@ export default function ChatBox({ analysis }: { analysis: any }) {
             <div className="p-3 rounded-lg bg-gray-100 text-gray-500 rounded-bl-none text-xs italic">Consulting the charts...</div>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
       
       <div className="py-3 flex flex-wrap gap-2 text-xs text-gray-600 mt-auto">

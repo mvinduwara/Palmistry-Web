@@ -3,6 +3,11 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY as string);
 
+interface HistoryMessage {
+  sender: 'user' | 'ai';
+  text: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { message, history, analysis } = await req.json();
@@ -25,7 +30,7 @@ export async function POST(req: NextRequest) {
       Be encouraging but mysterious. Do not break character.
     `;
 
-    const formattedHistory = history.map((msg: any) => ({
+    const formattedHistory = history.map((msg: HistoryMessage) => ({
       role: msg.sender === 'user' ? 'user' : 'model',
       parts: [{ text: msg.text }],
     }));

@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import ChatBox from "@/components/ChatBox"; 
-
-interface PalmAnalysis {
-  dominant_mounts: string[];
-  line_analysis: string;
-  identified_yogs: string[];
-  reading_summary: string;
-}
+import ChatBox, { PalmAnalysis } from "@/components/ChatBox"; 
 
 export default function Home() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -20,7 +13,7 @@ export default function Home() {
   const [englishAnalysis, setEnglishAnalysis] = useState<PalmAnalysis | null>(null);
   const [sinhalaAnalysis, setSinhalaAnalysis] = useState<PalmAnalysis | null>(null);
   const [currentLanguage, setCurrentLanguage] = useState<'en' | 'si'>('en');
-
+  
   const [isReadingComplete, setIsReadingComplete] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -60,7 +53,7 @@ export default function Home() {
       if (response.ok && data.analysis) {
         setStatus("Analysis complete!");
         setEnglishAnalysis(data.analysis);
-        setIsReadingComplete(true); 
+        setIsReadingComplete(true);
       } else {
         setStatus(`Error: ${data.error || "Failed to parse reading."}`);
       }
@@ -113,9 +106,10 @@ export default function Home() {
 
         {isReadingComplete && (
           <div className="w-full lg:w-1/3 lg:sticky lg:top-10 h-[600px] lg:h-[800px] animate-fade-in order-2 lg:order-1">
-           <ChatBox analysis={englishAnalysis} />
+            <ChatBox analysis={englishAnalysis} />
           </div>
         )}
+
         <div className={`w-full rounded-xl bg-white p-8 shadow-lg order-1 lg:order-2 ${isReadingComplete ? 'lg:w-2/3' : ''}`}>
           
           <h1 className="mb-2 text-3xl font-bold text-gray-800 text-center">Practical Palmistry</h1>
@@ -188,14 +182,14 @@ export default function Home() {
                   <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-2">
                     {currentLanguage === 'en' ? 'Summary' : 'සාරාංශය'}
                   </h3>
-                  <p className="text-gray-700 italic">"{displayAnalysis.reading_summary}"</p>
+                  <p className="text-gray-700 italic">"{displayAnalysis?.reading_summary}&quot;</p>
                 </div>
 
                 <div>
                   <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">
                     {currentLanguage === 'en' ? 'Identified Yogs' : 'හඳුනාගත් යෝග'}
                   </h3>
-                  {displayAnalysis.identified_yogs.length > 0 ? (
+                  {displayAnalysis?.identified_yogs && displayAnalysis.identified_yogs.length > 0 ? (
                     <ul className="flex flex-wrap gap-2">
                       {displayAnalysis.identified_yogs.map((yog, i) => (
                         <li key={i} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
@@ -214,7 +208,7 @@ export default function Home() {
                   <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">
                     {currentLanguage === 'en' ? 'Line Analysis' : 'රේඛා විශ්ලේෂණය'}
                   </h3>
-                  <p className="text-gray-700 text-sm leading-relaxed">{displayAnalysis.line_analysis}</p>
+                  <p className="text-gray-700 text-sm leading-relaxed">{displayAnalysis?.line_analysis}</p>
                 </div>
 
                 <div>
@@ -222,7 +216,7 @@ export default function Home() {
                     {currentLanguage === 'en' ? 'Dominant Mounts' : 'ප්‍රධාන ග්‍රහ මණ්ඩල'}
                   </h3>
                   <ul className="list-disc pl-5 text-sm text-gray-700">
-                    {displayAnalysis.dominant_mounts.map((mount, i) => (
+                    {displayAnalysis?.dominant_mounts && displayAnalysis.dominant_mounts.map((mount, i) => (
                       <li key={i}>{mount}</li>
                     ))}
                   </ul>
