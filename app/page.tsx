@@ -182,7 +182,7 @@ export default function Home() {
                   <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-2">
                     {currentLanguage === 'en' ? 'Summary' : 'සාරාංශය'}
                   </h3>
-                  <p className="text-gray-700 italic">"{displayAnalysis?.reading_summary}&quot;</p>
+                  <p className="text-gray-700 italic">&quot;{displayAnalysis?.reading_summary}&quot;</p>
                 </div>
 
                 <div>
